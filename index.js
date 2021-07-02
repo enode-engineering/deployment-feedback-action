@@ -144,19 +144,27 @@ async function createComment(token, owner, repo, issueNumber, body) {
 async function run() {
   try {
     const releaseVersion = core.getInput("releaseVersion");
-    const repoName = core.getInput("repoName");
+
+    const repository = core.getInput("repository");
+    core.info(`Repository: ${repository}`);
+    const [owner, repoName] = repository.split("/");
+    core.info(`Owner: ${owner} / Repo: ${repoName}`);
+
+    const clusterName = core.getInput("clusterName");
+    const serviceName = core.getInput("serviceName");
+
     const devEcsKey = core.getInput("devEcsKey");
     const devEcsSecret = core.getInput("devEcsSecret");
     const previewEcsKey = core.getInput("previewEcsKey");
     const previewEcsSecret = core.getInput("previewEcsSecret");
     const productionEcsKey = core.getInput("productionEcsKey");
     const productionEcsSecret = core.getInput("productionEcsSecret");
-    const clusterName = core.getInput("clusterName");
-    const serviceName = core.getInput("serviceName");
 
     const token = core.getInput("token");
-    const owner = core.getInput("owner");
-    const issueNumber = core.getInput("issueNumber");
+    const ref = core.getInput("ref");
+    core.info(`Ref: ${ref}`);
+    const issueNumber = ref.split("/")[2];
+    core.info(`PR Number: ${issueNumber}`);
 
     const images = await deploymentFeedback({
       releaseVersion,

@@ -3,11 +3,9 @@ description: 'Continuous Deployment feedback for releases'
 inputs:
   token:
     required: true
-  owner:
+  repository:
     required: true
-  issueNumber:
-    required: true
-  repoName:
+  ref:
     required: true
   clusterName:
     required: true
@@ -27,7 +25,6 @@ inputs:
     required: true
   productionEcsSecret:
     required: true
-outputs:
 runs:
   using: 'node12'
   main: 'dist/index.js'
