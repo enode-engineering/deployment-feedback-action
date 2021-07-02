@@ -172,14 +172,35 @@ async function createComment(token, owner, repo, issueNumber, body) {
   core.info(`Comment created: ${JSON.stringify(comment)}`);
 }
 
+async function findPullRequest(token, owner, repo, sha) {
+  const octokit = github.getOctokit(token);
+
+  const relatedPullsReq =
+    await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      owner,
+      repo,
+      commit_sha: sha,
+    });
+  const relatedPulls = relatedPullsReq.data;
+  const openPrs = relatedPulls.filter((pr) => pr.state === "open");
+  const mainPrs = openPrs.filter((pr) => pr.base.ref === "main");
+
+  if (mainPrs) {
+    core.info(`${mainPrs.length} PRs open to main: ${JSON.stringify(mainPrs)}`);
+    return mainPrs;
+  } else {
+    return [];
+  }
+}
+
 async function run() {
   try {
-    const releaseVersion = core.getInput("releaseVersion");
+    const event = core.getInput("event");
+    core.info(`Event: ${event}`);
 
+    const releaseVersion = core.getInput("releaseVersion");
     const repository = core.getInput("repository");
-    core.info(`Repository: ${repository}`);
     const [owner, repoName] = repository.split("/");
-    core.info(`Owner: ${owner} / Repo: ${repoName}`);
 
     const clusterName = core.getInput("clusterName");
     const serviceName = core.getInput("serviceName");
@@ -192,17 +213,7 @@ async function run() {
     const productionEcsSecret = core.getInput("productionEcsSecret");
 
     const token = core.getInput("token");
-    const ref = core.getInput("ref");
-    core.info(`Ref: ${ref}`);
-    // const issueNumber = ref.split("/")[2];
-    // core.info(`PR Number: ${issueNumber}`);
-
-    const prNumber = core.getInput("prNumber");
-    core.info(`PR Number: ${prNumber}`);
-    const issueNumber = prNumber;
-
-    const event = core.getInput("event");
-    core.info(`Event: ${event}`);
+    const sha = core.getInput("sha");
 
     const images = await deploymentFeedback({
       releaseVersion,
@@ -225,11 +236,14 @@ async function run() {
     const body = `Continuous Delivery Summary for **${releaseVersion}**:
 ${summary.join("\n")}
 
-_Information valid as ${new Date().toISOString()}_`;
+_Information valid as of ${new Date().toISOString()}_`;
 
     core.info(`Comment body is: ${body}`);
 
-    await createComment(token, owner, repoName, issueNumber, body);
+    const prs = await findPullRequest(token, owner, repoName, sha);
+    await Promise.all(
+      prs.map((pr) => createComment(token, owner, repoName, pr.number, body)),
+    );
 
     core.setOutput("images", JSON.stringify(images));
   } catch (error) {
