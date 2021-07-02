@@ -168,7 +168,7 @@ async function findPullRequest(token, owner, repo, sha) {
 async function run() {
   try {
     const event = core.getInput("event");
-    core.info(`Event: ${event}`);
+    // core.info(`Event: ${event}`);
 
     const releaseVersion = core.getInput("releaseVersion");
     const repository = core.getInput("repository");
@@ -201,16 +201,19 @@ async function run() {
     });
 
     const summary = images.map((i) => {
-      const icon = i.willBeReplaced ? "✅" : "❌";
-      return `- ${i.env}: ${icon}  (Current image is: ${i.currentImageTag})`;
+      if (i.willBeReplaced) {
+        return `✅ **${i.env}** will be updated, currently running ${i.currentImageTag}`;
+      } else {
+        return `❌ **${i.env}** will not be updated, currently running ${i.currentImageTag}`;
+      }
     });
 
-    const body = `Continuous Delivery Summary for **${releaseVersion}**:
+    const body = `Continuous Deployment Summary for **v${releaseVersion}**:
 ${summary.join("\n")}
 
 _Information valid as of ${new Date().toISOString()}_`;
 
-    core.info(`Comment body is: ${body}`);
+    core.info(`Comment: ${body}`);
 
     const prs = await findPullRequest(token, owner, repoName, sha);
     await Promise.all(
