@@ -5,9 +5,7 @@ inputs:
     required: true
   repository:
     required: true
-  ref:
-    required: true
-  prNumber:
+  sha:
     required: true
   event:
     required: true
