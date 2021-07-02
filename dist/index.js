@@ -240,6 +240,7 @@ async function run() {
     });
 
     const body = `Continuous Deployment Summary for **v${releaseVersion}**:
+
 ${summary.join("\n")}
 
 _Information valid as of ${new Date().toISOString()}_`;
