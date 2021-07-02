@@ -162,14 +162,17 @@ async function deploymentFeedback(opts) {
 async function createComment(token, owner, repo, issueNumber, body) {
   const octokit = github.getOctokit(token);
 
-  const comment = await octokit.rest.issues.createComment({
-    owner,
-    repo,
-    issueNumber,
-    body,
-  });
-
-  core.info(`Comment created: ${JSON.stringify(comment)}`);
+  try {
+    const comment = await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body,
+    });
+    core.info(`Comment created: ${JSON.stringify(comment)}`);
+  } catch (err) {
+    core.info(`Error attempting to comment on PR #${issueNumber}: ${err}`);
+  }
 }
 
 async function findPullRequest(token, owner, repo, sha) {
