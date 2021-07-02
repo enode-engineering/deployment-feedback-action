@@ -9,6 +9,8 @@ inputs:
     required: true
   prNumber:
     required: true
+  event:
+    required: true
   clusterName:
     required: true
   serviceName:

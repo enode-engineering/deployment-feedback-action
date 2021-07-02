@@ -194,8 +194,15 @@ async function run() {
     const token = core.getInput("token");
     const ref = core.getInput("ref");
     core.info(`Ref: ${ref}`);
-    const issueNumber = ref.split("/")[2];
-    core.info(`PR Number: ${issueNumber}`);
+    // const issueNumber = ref.split("/")[2];
+    // core.info(`PR Number: ${issueNumber}`);
+
+    const prNumber = core.getInput("prNumber");
+    core.info(`PR Number: ${prNumber}`);
+    const issueNumber = prNumber;
+
+    const event = core.getInput("event");
+    core.info(`Event: ${event}`);
 
     const images = await deploymentFeedback({
       releaseVersion,

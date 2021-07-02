@@ -167,7 +167,11 @@ async function run() {
     // core.info(`PR Number: ${issueNumber}`);
 
     const prNumber = core.getInput("prNumber");
+    core.info(`PR Number: ${prNumber}`);
     const issueNumber = prNumber;
+
+    const event = core.getInput("event");
+    core.info(`Event: ${event}`);
 
     const images = await deploymentFeedback({
       releaseVersion,
