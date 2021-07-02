@@ -1,13 +1,33 @@
-name: 'Wait'
-description: 'Wait a designated number of milliseconds'
+name: 'Deployment Feedback'
+description: 'Continuous Deployment feedback for releases'
 inputs:
-  milliseconds:  # id of input
-    description: 'number of milliseconds to wait'
+  token:
     required: true
-    default: '1000'
+  owner:
+    required: true
+  issueNumber:
+    required: true
+  repoName:
+    required: true
+  clusterName:
+    required: true
+  serviceName:
+    required: true
+  releaseVersion:
+    required: true
+  devEcsKey:
+    required: true
+  devEcsSecret:
+    required: true
+  previewEcsKey:
+    required: true
+  previewEcsSecret:
+    required: true
+  productionEcsKey:
+    required: true
+  productionEcsSecret:
+    required: true
 outputs:
-  time: # output will be available to future steps
-    description: 'The message to output'
 runs:
   using: 'node12'
   main: 'dist/index.js'

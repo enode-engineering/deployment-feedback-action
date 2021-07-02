@@ -1,7 +1,7 @@
 {
-  "name": "javascript-action",
+  "name": "deployment-feedback",
   "version": "1.0.0",
-  "description": "JavaScript Action Template",
+  "description": "Deployment feedback",
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
@@ -11,25 +11,29 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/javascript-action.git"
+    "url": "git+https://github.com/enode-engineering/deployment-feedback-action"
   },
   "keywords": [
     "GitHub",
     "Actions",
     "JavaScript"
   ],
-  "author": "",
+  "author": "Mauro Pompilio",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/actions/javascript-action/issues"
+    "url": "https://github.com/enode-engineering/deployment-feedback-action/issues"
   },
-  "homepage": "https://github.com/actions/javascript-action#readme",
+  "homepage": "https://github.com/enode-engineering/deployment-feedback-action",
   "dependencies": {
-    "@actions/core": "^1.2.5"
+    "@actions/core": "^1.2.5",
+    "@actions/github": "^5.0.0",
+    "@aws-sdk/client-ecs": "^3.19.0",
+    "semver": "^7.3.5"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.27.0",
     "eslint": "^7.4.0",
-    "jest": "^26.6.3"
+    "jest": "^26.6.3",
+    "prettier": "^2.3.2"
   }
 }
