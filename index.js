@@ -11,6 +11,7 @@ const REGION = "eu-north-1";
 
 const ENV_VERSION_COMPARATOR = {
   dev: ">=", // Deploy all newer versions
+  sandbox: "^", // Deploy only minor and patch versions
   preview: "^", // Deploy only minor and patch versions
   production: "~", // Deploy only patches
 };
@@ -60,6 +61,8 @@ async function deploymentFeedback(opts) {
     devEcsSecret,
     previewEcsKey,
     previewEcsSecret,
+    sandboxEcsKey,
+    sandboxEcsSecret,
     productionEcsKey,
     productionEcsSecret,
   } = opts;
@@ -68,6 +71,10 @@ async function deploymentFeedback(opts) {
     dev: {
       key: devEcsKey,
       secret: devEcsSecret,
+    },
+    sandbox: {
+      key: sandboxEcsKey,
+      secret: sandboxEcsSecret,
     },
     preview: {
       key: previewEcsKey,
@@ -179,6 +186,8 @@ async function run() {
 
     const devEcsKey = core.getInput("devEcsKey");
     const devEcsSecret = core.getInput("devEcsSecret");
+    const sandboxEcsKey = core.getInput("sandboxEcsKey");
+    const sandboxEcsSecret = core.getInput("sandboxEcsSecret");
     const previewEcsKey = core.getInput("previewEcsKey");
     const previewEcsSecret = core.getInput("previewEcsSecret");
     const productionEcsKey = core.getInput("productionEcsKey");
@@ -194,6 +203,8 @@ async function run() {
       serviceName,
       devEcsKey,
       devEcsSecret,
+      sandboxEcsKey,
+      sandboxEcsSecret,
       previewEcsKey,
       previewEcsSecret,
       productionEcsKey,
