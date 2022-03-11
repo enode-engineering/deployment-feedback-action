@@ -19,6 +19,10 @@ inputs:
     required: true
   devEcsSecret:
     required: true
+  sandboxEcsKey:
+    required: true
+  sandboxEcsSecret:
+    required: true
   previewEcsKey:
     required: true
   previewEcsSecret:

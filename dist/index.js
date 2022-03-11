@@ -42,6 +42,7 @@ const REGION = "eu-north-1";
 
 const ENV_VERSION_COMPARATOR = {
   dev: ">=", // Deploy all newer versions
+  sandbox: "^", // Deploy only minor and patch versions
   preview: "^", // Deploy only minor and patch versions
   production: "~", // Deploy only patches
 };
@@ -91,6 +92,8 @@ async function deploymentFeedback(opts) {
     devEcsSecret,
     previewEcsKey,
     previewEcsSecret,
+    sandboxEcsKey,
+    sandboxEcsSecret,
     productionEcsKey,
     productionEcsSecret,
   } = opts;
@@ -99,6 +102,10 @@ async function deploymentFeedback(opts) {
     dev: {
       key: devEcsKey,
       secret: devEcsSecret,
+    },
+    sandbox: {
+      key: sandboxEcsKey,
+      secret: sandboxEcsSecret,
     },
     preview: {
       key: previewEcsKey,
@@ -162,47 +169,63 @@ async function deploymentFeedback(opts) {
 async function createComment(token, owner, repo, issueNumber, body) {
   const octokit = github.getOctokit(token);
 
-  const comment = await octokit.rest.issues.createComment({
-    owner,
-    repo,
-    issueNumber,
-    body,
-  });
+  try {
+    const comment = await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body,
+    });
+    core.info(`Comment created: ${JSON.stringify(comment)}`);
+  } catch (err) {
+    core.info(`Error attempting to comment on PR #${issueNumber}: ${err}`);
+  }
+}
 
-  core.info(`Comment created: ${JSON.stringify(comment)}`);
+async function findPullRequest(token, owner, repo, sha) {
+  const octokit = github.getOctokit(token);
+
+  const relatedPullsReq =
+    await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      owner,
+      repo,
+      commit_sha: sha,
+    });
+  const relatedPulls = relatedPullsReq.data;
+  const openPrs = relatedPulls.filter((pr) => pr.state === "open");
+  const mainPrs = openPrs.filter((pr) => pr.base.ref === "main");
+
+  if (mainPrs) {
+    core.info(`${mainPrs.length} PRs open to main: ${JSON.stringify(mainPrs)}`);
+    return mainPrs;
+  } else {
+    return [];
+  }
 }
 
 async function run() {
   try {
-    const releaseVersion = core.getInput("releaseVersion");
+    const event = core.getInput("event");
+    // core.info(`Event: ${event}`);
 
+    const releaseVersion = core.getInput("releaseVersion");
     const repository = core.getInput("repository");
-    core.info(`Repository: ${repository}`);
     const [owner, repoName] = repository.split("/");
-    core.info(`Owner: ${owner} / Repo: ${repoName}`);
 
     const clusterName = core.getInput("clusterName");
     const serviceName = core.getInput("serviceName");
 
     const devEcsKey = core.getInput("devEcsKey");
     const devEcsSecret = core.getInput("devEcsSecret");
+    const sandboxEcsKey = core.getInput("sandboxEcsKey");
+    const sandboxEcsSecret = core.getInput("sandboxEcsSecret");
     const previewEcsKey = core.getInput("previewEcsKey");
     const previewEcsSecret = core.getInput("previewEcsSecret");
     const productionEcsKey = core.getInput("productionEcsKey");
     const productionEcsSecret = core.getInput("productionEcsSecret");
 
     const token = core.getInput("token");
-    const ref = core.getInput("ref");
-    core.info(`Ref: ${ref}`);
-    // const issueNumber = ref.split("/")[2];
-    // core.info(`PR Number: ${issueNumber}`);
-
-    const prNumber = core.getInput("prNumber");
-    core.info(`PR Number: ${prNumber}`);
-    const issueNumber = prNumber;
-
-    const event = core.getInput("event");
-    core.info(`Event: ${event}`);
+    const sha = core.getInput("sha");
 
     const images = await deploymentFeedback({
       releaseVersion,
@@ -211,6 +234,8 @@ async function run() {
       serviceName,
       devEcsKey,
       devEcsSecret,
+      sandboxEcsKey,
+      sandboxEcsSecret,
       previewEcsKey,
       previewEcsSecret,
       productionEcsKey,
@@ -218,18 +243,25 @@ async function run() {
     });
 
     const summary = images.map((i) => {
-      const icon = i.willBeReplaced ? "✅" : "❌";
-      return `- ${i.env}: ${icon}  (Current image is: ${i.currentImageTag})`;
+      if (i.willBeReplaced) {
+        return `✅ **${i.env}** will be updated, currently running ${i.currentImageTag}`;
+      } else {
+        return `❌ **${i.env}** will not be updated, currently running ${i.currentImageTag}`;
+      }
     });
 
-    const body = `Continuous Delivery Summary for **${releaseVersion}**:
+    const body = `Continuous Deployment Summary for **v${releaseVersion}**:
+
 ${summary.join("\n")}
 
-_Information valid as ${new Date().toISOString()}_`;
+_Information valid as of ${new Date().toISOString()}_`;
 
-    core.info(`Comment body is: ${body}`);
+    core.info(`Comment: ${body}`);
 
-    await createComment(token, owner, repoName, issueNumber, body);
+    const prs = await findPullRequest(token, owner, repoName, sha);
+    await Promise.all(
+      prs.map((pr) => createComment(token, owner, repoName, pr.number, body)),
+    );
 
     core.setOutput("images", JSON.stringify(images));
   } catch (error) {
